@@ -1,0 +1,140 @@
+﻿@model AG_Grid.Models.Employee;
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AG_Grid</title>
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
+    <style>
+
+        #ag {
+            height: 600px;
+            margin-top: 10px;
+        }
+
+        .ag-theme-quartz-dark {
+            --ag-header-height: 50px;
+            font-size: 18px;
+        }
+
+        .ag-theme-quartz-dark .ag-header {
+            background-color: #7C9D96;
+        }
+
+        .ag-paging-panel {
+            background-color: #7C9D96;
+            color: white;
+            height: 60px;
+        }
+
+        .ag-theme-quartz-dark .ag-header-cell-label {
+            font-size: 20px;
+            color: white;
+        }
+
+        .ag-icon-filter, .ag-icon-menu {
+            color: white;
+        }
+
+        .btnColor {
+            background-color: #FFCC70;
+            margin-top: 30px;
+            padding: 7px 20px;
+            border-radius: 10px;
+        }
+
+        .divForm {
+            background-color: #7C9D96;
+            border: 1px solid black;
+            border-radius: 5px;
+        }
+
+        .divForm label {
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="divForm fs-5 px-3 py-3">
+            <form class="row g-4 fs-5" asp-controller="Home" asp-action="Add" method="post">
+                <div class="col-md-3">
+                    <label asp-for="Name" class="control-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Designation" class="control-label"></label>
+                    <input asp-for="Designation" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Salary" class="control-label"></label>
+                    <input asp-for="Salary" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <input type="submit" value="Add Data" class="btn btnColor" />
+                </div>
+            </form>
+            <span class="text-warning fs-6 mt-1">@TempData["error"]</span>
+        </div>
+
+        <div id="ag" class="ag-theme-quartz-dark"></div>
+
+    </div>
+
+
+
+    <script>
+        const gridOptions = {
+
+            pagination: true,
+            
+            defaultColDef: {
+                filter: true,
+                width: "317px",
+                editable: true,
+                floatingFilter: true,
+            },
+
+            columnDefs: [
+                { field: "name" }, { field: "designation" }, { field: "salary" },
+                {
+                    headerName: "Action",
+                    cellRenderer: function (x) {
+                        var d = x.data;
+                        return `<button class="btn btn-danger" onclick = "deleteData(${d.id})">Delete</button>`
+                    },
+                    editable: false,
+                }
+            ],
+            
+            onCellValueChanged: (event) => {
+                fetch(`/Home/Update/`, {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json",
+                    },
+                    body: JSON.stringify(event.data),
+                })
+            },
+        };
+
+        const AG = document.querySelector("#ag");
+        const gridApi = agGrid.createGrid(AG, gridOptions);
+
+        fetch('/Home/ShowData')
+            .then((response) => response.json())
+            .then((data) => gridApi.setGridOption('rowData', data));
+
+
+        function deleteData(id) {
+            fetch(`/Home/Delete/${id}`, { method: "POST" })
+                .then((response) => response.json())
+                .then((data) => gridApi.setGridOption('rowData', data));
+
+        }
+
+    </script>
+</body>
+</html>
